@@ -17,10 +17,18 @@
   (() => {
     if (!preloader) return;
     let pct = 0;
+    // the bar used to just be a fake timer, fully detached from whether the
+    // page's actual images were ready — it would hide and then real photos
+    // kept popping in behind it. Now it also waits on the real `load` event
+    // (fires once every image on the page has actually finished), only
+    // letting the fake tick run up to 100 once that's genuinely true.
+    let pageLoaded = document.readyState === 'complete';
+    if (!pageLoaded) addEventListener('load', () => { pageLoaded = true; }, { once: true });
     const t0 = performance.now();
-    const minShow = reduce ? 200 : 1300;
+    const minShow = reduce ? 200 : 1800;
     const tick = () => {
-      pct = Math.min(100, pct + Math.random() * 14 + 4);
+      const cap = pageLoaded ? 100 : 92;
+      pct = Math.min(cap, pct + Math.random() * 14 + 4);
       if (preBar) preBar.style.right = (100 - pct) + '%';
       if (preCount) preCount.textContent = Math.round(pct) + '%';
       if (pct < 100) setTimeout(tick, 90 + Math.random() * 90);
@@ -37,8 +45,9 @@
     };
     if (reduce) { pct = 100; if (preCount) preCount.textContent = '100%'; finish(); }
     else tick();
-    // safety net: never block the page for more than 4s
-    setTimeout(() => { if (root.classList.contains('loading')) finish(); }, 4000);
+    // safety net: never block the page for more than 7s, even if `load`
+    // never fires (a slow or failed request shouldn't strand the visitor)
+    setTimeout(() => { if (root.classList.contains('loading')) finish(); }, 7000);
   })();
 
   /* ---------- CUSTOM CURSOR ---------- */
@@ -335,13 +344,15 @@
      that read as unsettling up close, so that gap is cut too — SAFE
      below jumps over it, small enough in gaze angle to pass as a normal
      step. None of those frames ever get downloaded. Drawn to a canvas so
-     swaps never flicker. Skipped on coarse pointers / reduced motion —
-     the poster frame (f00) just sits there instead. */
+     swaps never flicker. Skipped only for reduced motion — the poster
+     frame (f00) just sits there instead. Touch devices get the same
+     scrub via touchstart/touchmove (tap or drag near him), not just
+     fine-pointer mousemove. */
   (() => {
     const stage = $('#mascotStage');
     const media = $('#mascotMedia');
     const canvas = $('#mascotCanvas');
-    if (!stage || !media || !canvas || reduce || !fine) return;
+    if (!stage || !media || !canvas || reduce) return;
 
     const SAFE = [...Array(13).keys(), ...Array.from({ length: 19 }, (_, i) => i + 18)]; // 0..12, 18..36
     const ctx = canvas.getContext('2d');
@@ -376,6 +387,11 @@
     };
     media.addEventListener('mousemove', e => aimAt(e.clientY), { passive: true });
     media.addEventListener('mouseleave', () => { target = 0; }); // back to calm/up when the cursor leaves
+
+    // touch: tap or drag a finger near him — same scrub, no mousemove needed
+    media.addEventListener('touchstart', e => { if (e.touches[0]) aimAt(e.touches[0].clientY); }, { passive: true });
+    media.addEventListener('touchmove', e => { if (e.touches[0]) aimAt(e.touches[0].clientY); }, { passive: true });
+    media.addEventListener('touchend', () => { target = 0; }, { passive: true });
 
     // scrolling the page brings the block under an already-stationary cursor
     // without firing a real mousemove, which would otherwise leave him stuck
