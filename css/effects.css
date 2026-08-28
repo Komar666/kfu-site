@@ -1,0 +1,25 @@
+/* =========================================================
+   КФУ — Signature effects (lightweight, no continuous blends)
+   ========================================================= */
+
+/* Card sheen sweep — one-shot on hover, cheap (no blur/backdrop) */
+.ncard, .seal {
+  position: relative;
+}
+.ncard::after, .seal::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(236,202,125,.08) 50%, rgba(201,162,75,.12) 55%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform .7s cubic-bezier(.22,.61,.36,1);
+  pointer-events: none; z-index: 5;
+}
+.ncard:hover::after, .seal:hover::after {
+  transform: translateX(120%);
+}
+
+/* Emblem hover pulse */
+.brand .emblem { transition: filter .4s, transform .4s; }
+.brand:hover .emblem { filter: drop-shadow(0 0 10px rgba(236,202,125,.7)); transform: scale(1.08) rotate(3deg); }
+
+/* Hero entrance is fully scroll-driven now (see main.js "HERO cover choreography"). */
