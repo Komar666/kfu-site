@@ -595,11 +595,20 @@
     apply(0); // opening state, set immediately (no flash of the final look)
 
     let hTicking = false;
+    let lastP = 0; // apply() rebuilds two multi-layer gradient masks + walks
+    // every letter on each call — real cost. Once progress settles at 1 (the
+    // sequence is done), scrolling on into Образование kept re-running that
+    // full computation every single scroll frame for no visual change at
+    // all, which is exactly the stutter right at that section boundary.
     const onHeroScroll = () => {
       const rect = scrollEl.getBoundingClientRect();
       if (rect.bottom < -100) return; // hero long gone — final state stays frozen, skip work
       if (!hTicking) {
-        requestAnimationFrame(() => { apply(progress()); hTicking = false; });
+        requestAnimationFrame(() => {
+          const p = progress();
+          if (p !== lastP) { apply(p); lastP = p; }
+          hTicking = false;
+        });
         hTicking = true;
       }
     };
