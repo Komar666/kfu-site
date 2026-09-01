@@ -671,16 +671,20 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
 .useful{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
 .upill{position:relative;z-index:0;padding:13px 24px;border-radius:40px;border:1px solid var(--card-brd);background:var(--panel);
   font-size:.86rem;font-weight:600;
-  /* color goes dark-ink -> light-cream, a full swing that RGB-interpolates
-     through a muddy grey-brown midpoint — kept short so text clears that
-     zone quickly, while the fill/ring behind it take their time */
-  transition:color .18s var(--ease-out),border-color .18s var(--ease-out);
+  /* color swings dark-ink -> light-cream — if it moves in step with the
+     fill behind it (::before), light text spends real time sitting on a
+     still-pale background mid-fade, reading as if the text is stuck/lagging.
+     So going IN, text waits (transition-delay) until the fill is already
+     dark enough to hold it; going OUT it snaps back dark immediately —
+     this rule is what applies at rest, i.e. on the way out. */
+  transition:color .2s var(--ease-out),border-color .2s var(--ease-out);
   display:inline-flex;gap:10px;align-items:center}
 .upill::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;
   background:linear-gradient(120deg,var(--maroon-2),var(--maroon));
   opacity:0;transition:opacity .4s var(--ease)}
 .upill:hover::before{opacity:1}
-.upill:hover{color:#f3e7d2;border-color:transparent}
+.upill:hover{color:#f3e7d2;border-color:transparent;
+  transition:color .25s var(--ease) .15s,border-color .25s var(--ease) .15s}
 .upill .dot{width:6px;height:6px;border-radius:50%;background:var(--gold)}
 
 /* ============================================================
