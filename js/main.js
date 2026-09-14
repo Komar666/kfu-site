@@ -98,21 +98,10 @@
   const nav = $('#nav');
   const progress = $('#progress');
   const totop = $('#totop');
-  const narrow = matchMedia('(max-width: 760px)');
-  let lastY = window.scrollY;
   const onScroll = () => {
     const y = window.scrollY;
     nav?.classList.toggle('scrolled', y > 40);
-    // on phones the button only appears while scrolling back up, so it
-    // never sits on top of the text you're reading on the way down
-    const goingUp = y < lastY - 2;
-    const goingDown = y > lastY + 2;
-    if (totop) {
-      if (y <= 700) totop.classList.remove('show');
-      else if (!narrow.matches || goingUp) totop.classList.add('show');
-      else if (goingDown) totop.classList.remove('show');
-    }
-    lastY = y;
+    totop?.classList.toggle('show', y > 700);
     if (progress) {
       const h = document.documentElement.scrollHeight - innerHeight;
       progress.style.width = (h > 0 ? (y / h) * 100 : 0) + '%';
@@ -124,9 +113,8 @@
 
   /* ---------- MOBILE drawer ---------- */
   const drawer = $('#drawer');
-  const burger = $('#burger');
-  const openDrawer  = () => { drawer?.classList.add('open'); burger?.setAttribute('aria-expanded', 'true'); };
-  const closeDrawer = () => { drawer?.classList.remove('open'); burger?.setAttribute('aria-expanded', 'false'); };
+  const openDrawer  = () => drawer?.classList.add('open');
+  const closeDrawer = () => drawer?.classList.remove('open');
   $('#burger')?.addEventListener('click', openDrawer);
   $('#drawerClose')?.addEventListener('click', closeDrawer);
   $$('#drawer a').forEach(a => a.addEventListener('click', closeDrawer));
@@ -371,11 +359,8 @@
     const frames = new Array(SAFE.length);
     let loaded = 0;
 
-    // ~2 MB of frames — only fetched once the section is about a screen
-    // away, not on page load (the mascot sits at the very bottom)
-    const loadFrames = () => SAFE.forEach((frameNo, i) => {
+    SAFE.forEach((frameNo, i) => {
       const img = new Image();
-      img.decoding = 'async';
       img.src = `assets/mascot/f${String(frameNo).padStart(2, '0')}.webp`;
       img.onload = () => {
         if (++loaded === SAFE.length) {
@@ -387,11 +372,6 @@
       };
       frames[i] = img;
     });
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver((es, obs) => {
-        if (es.some(e => e.isIntersecting)) { obs.disconnect(); loadFrames(); }
-      }, { rootMargin: '100% 0px' }).observe(stage);
-    } else loadFrames();
 
     let visible = false;
     if ('IntersectionObserver' in window) {
@@ -470,229 +450,170 @@
     }
   }
 
-  /* ---------- COUNT-UP numbers ----------
-     The real value is written in the HTML (crawlers, no-JS, screen
-     readers all get it). The animation is only a layer on top: the
-     number is split into a visually-hidden real copy plus an
-     aria-hidden visible copy, and only the visible one counts up. */
-  const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  /* ---------- COUNT-UP numbers ---------- */
+  const fmt = n => n.toLocaleString('ru-RU');
   const animateCount = el => {
     const target = +el.dataset.count;
-    const shown = el.querySelector('.cnt');
     const dur = 1500;
     const t0 = performance.now();
     const step = now => {
       const p = Math.min((now - t0) / dur, 1);
       const eased = 1 - Math.pow(1 - p, 3);
-      shown.textContent = fmt(Math.round(target * eased));
+      el.textContent = fmt(Math.round(target * eased));
       if (p < 1) requestAnimationFrame(step);
-      else { shown.textContent = fmt(target); el.classList.add('counted'); }
+      else { el.textContent = fmt(target); el.classList.add('counted'); }
     };
     requestAnimationFrame(step);
   };
   const counters = $$('[data-count]');
   if (reduce || !('IntersectionObserver' in window)) {
-    counters.forEach(el => el.classList.add('counted'));
+    counters.forEach(el => (el.textContent = fmt(+el.dataset.count)));
   } else {
-    counters.forEach(el => {
-      const real = el.textContent;
-      el.innerHTML = '';
-      const sr = document.createElement('span');
-      sr.className = 'sr-only';
-      sr.textContent = real;
-      const shown = document.createElement('span');
-      shown.className = 'cnt';
-      shown.setAttribute('aria-hidden', 'true');
-      shown.textContent = '0';
-      el.append(sr, shown);
-    });
-    // same trigger as the reveal fade, so the count starts as the card fades in
     const cio = new IntersectionObserver((entries, obs) => {
       entries.forEach(e => {
         if (e.isIntersecting) { animateCount(e.target); obs.unobserve(e.target); }
       });
-    }, { threshold: 0.14, rootMargin: '0px 0px -8% 0px' });
+    }, { threshold: 0.6 });
     counters.forEach(el => cio.observe(el));
   }
 
-  /* ---------- ADMISSION countdown — days until document intake opens ---------- */
-  (() => {
-    const el = $('#admCountdown');
-    const unit = $('#admCountdownUnit');
-    if (!el) return;
-    const [y, m, d] = el.dataset.deadline.split('-').map(Number);
-    const today = new Date();
-    const start = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-    const days = Math.max(0, Math.round((Date.UTC(y, m - 1, d) - start) / 864e5));
-    const plural = n => {
-      const a = n % 100, b = n % 10;
-      if (a > 10 && a < 20) return 'дней';
-      if (b === 1) return 'день';
-      if (b > 1 && b < 5) return 'дня';
-      return 'дней';
-    };
-    el.textContent = String(days);
-    if (unit) unit.textContent = plural(days);
-  })();
-
-  /* ---------- HERO: one transformation over ~1.5 screens ----------
-     Pinned with position:sticky (no scroll-jacking); one progress value
-     p 0→1 drives everything:
-       0.00–0.55  the painted strips at the edges widen toward the centre
-                  with hard edges, closing over the cover
-       0.55–0.85  instead of colliding, the seam dissolves — the past
-                  harbour's sea runs straight into the future city's
-       0.05–0.72  crest + КФУ monogram shrink and fly into the menu logo;
-                  the menu brand fades in as they land
-       0.12–0.75  the university name glides to the centre and turns
-                  cream over a soft veil, so it reads on the paintings
-       0.72–0.95  the tagline appears under it
-     Reduced motion: no pin, the finished composition is shown at once. */
+  /* ---------- HERO: cover choreography ----------
+     КФУ + crest + the scroll cue sit in resting CSS from the first frame —
+     the cover should never read as an empty screen before you've scrolled.
+     Everything else unfolds across one continuous scroll value (0→1),
+     driven by position:sticky (no scroll-jacking):
+       B  0.18–0.50  the past photo descends into view while
+                      П·Р·О·Ш·Л·О·Е cascades in top-to-bottom
+       C  0.46–0.78  the future photo rises into view while
+                      Б·У·Д·У·Щ·Е·Е cascades in bottom-to-top,
+                      with a sharper, overshooting snap
+       D  0.76–0.88  the subtitle writes itself in, left to right */
   (() => {
     const scrollEl = $('#heroScroll');
-    const pin = $('#heroPin');
-    if (!scrollEl || !pin) return;
+    if (!scrollEl || reduce) return; // resting CSS already shows the assembled cover
 
-    const past = $('#heroPast'), future = $('#heroFuture'), veil = $('#heroVeil');
-    const pastImg = $('img', past), futureImg = $('img', future);
-    const crest = $('#heroCrest'), mono = $('#heroMono'), name = $('#heroName');
-    const tag = $('#heroTag'), cue = $('#heroCue');
-    const brandLogo = $('.nav .brand__logo'), brandWord = $('.nav .brand__text b');
+    const pastImg = $('#pastImg');
+    const futureImg = $('#futureImg');
+    const pastLetters = $$('#wordPast span');
+    const futureLetters = $$('#wordFuture span');
+    const subtitle = $('#heroSubtitle');
+    const cue = $('.hero__pin .scrollcue');
 
     const clamp01 = n => Math.min(1, Math.max(0, n));
-    const seg = (p, a, b) => clamp01((p - a) / (b - a));
-    const easeInOut = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
     const easeOut = t => 1 - Math.pow(1 - t, 3);
+    const easeBack = t => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
 
-    let W = 0, H = 0, S = 0, B = 0, fly = null, lastP = -1;
+    const cascade = (els, p, start, end, opts) => {
+      const n = els.length;
+      const step = (end - start) / (n + 1.5);
+      const dur = step * 3;
+      els.forEach((el, i) => {
+        const order = opts.reverse ? (n - 1 - i) : i;
+        const lp = clamp01((p - (start + order * step)) / dur);
+        const e = opts.back ? easeBack(lp) : easeOut(lp);
+        const fromY = opts.fromBelow ? 32 : -32;
+        el.style.transform = `translateY(${(fromY * (1 - e)).toFixed(1)}px)`;
+        el.style.opacity = clamp01(e).toFixed(2);
+      });
+    };
 
-    // Everything is measured in the pin's own coordinates. While pinned the
-    // pin sits at viewport top 0, which is also the fixed nav's frame, so a
-    // pin-relative start point and a viewport-relative end point line up.
-    const measure = () => {
-      W = pin.clientWidth;
-      H = pin.clientHeight;
-      const narrowHero = W <= 860;
-      S = Math.round(W * (narrowHero ? 0.13 : 0.15));
-      B = Math.round(W * (narrowHero ? 0.10 : 0.07));
-      pin.style.setProperty('--strip', S + 'px');
-      pin.style.setProperty('--blend', B + 'px');
-
-      [crest, mono, name].forEach(el => { el.style.transform = ''; });
-      const pr = pin.getBoundingClientRect();
-      const rel = el => {
-        const r = el.getBoundingClientRect();
-        return { x: r.left - pr.left, y: r.top - pr.top, w: r.width, h: r.height };
-      };
-      const c = rel(crest), m = rel(mono), n = rel(name);
-      fly = { name: { dy: H * 0.46 - (n.y + n.h / 2) } };
-
-      if (brandLogo && brandWord) {
-        // crest → logo (the logo box is square, the crest image is wide —
-        // land on the image's contain-fit rectangle inside that box)
-        const lr = brandLogo.getBoundingClientRect();
-        const aspect = c.w / c.h;
-        const lw = Math.min(lr.width, lr.height * aspect), lh = lw / aspect;
-        fly.crest = {
-          dx: lr.left + (lr.width - lw) / 2 - c.x,
-          dy: lr.top + (lr.height - lh) / 2 - c.y,
-          s: lw / c.w
-        };
-        // monogram → "КФУ" word, scaled by font size, centred on its line
-        const br = brandWord.getBoundingClientRect();
-        const s = parseFloat(getComputedStyle(brandWord).fontSize) / parseFloat(getComputedStyle(mono).fontSize);
-        fly.mono = {
-          dx: br.left - m.x,
-          dy: br.top + br.height / 2 - (m.y + (m.h * s) / 2),
-          s
-        };
+    // Organic "painted" reveal edge — a soft linear fade plus a handful of
+    // soft round "droplets" scattered along the boundary (radial-gradients,
+    // simple default layering — no experimental composite modes). The
+    // droplets spread out mid-reveal and settle flush by the time it's
+    // fully painted, like a brushstroke that's just finished drying.
+    const wave = (i, phase) => Math.sin(i * 1.7 + phase) * 0.6 + Math.sin(i * 3.1 + phase * 1.6 + 1.3) * 0.4;
+    const paintMask = (progress, fromTop, phase) => {
+      const bell = Math.sin(Math.PI * clamp01(progress)); // 0 at start, 1 mid-reveal, 0 when fully painted
+      const reveal = progress * 100;
+      // soft is 0 exactly at progress=0 (nothing peeks before the reveal begins),
+      // widens through the middle, settles to a small antialiased edge at the end
+      const soft = 5 * progress + 13 * bell;
+      const dir = fromTop ? 'to bottom' : 'to top';
+      const stop1 = Math.max(0, reveal - soft).toFixed(1);
+      const stop2 = Math.min(100, reveal + soft).toFixed(1);
+      const layers = [`linear-gradient(${dir},#000 0%,#000 ${stop1}%,transparent ${stop2}%,transparent 100%)`];
+      const DROPS = 6;
+      for (let i = 0; i < DROPS; i++) {
+        const x = ((i + 0.5) / DROPS) * 100;
+        const jitter = wave(i, phase) * 11 * bell;
+        const y = fromTop ? reveal + jitter : (100 - reveal) - jitter;
+        // droplet size also rides the bell curve — zero-sized (invisible) at
+        // rest, full splatter mid-reveal, gone again once fully painted
+        const rw = Math.max(2, (70 + Math.abs(wave(i + 3, phase)) * 55) * bell);
+        const rh = Math.max(2, (45 + Math.abs(wave(i + 7, phase)) * 50) * bell);
+        layers.push(`radial-gradient(${rw.toFixed(0)}px ${rh.toFixed(0)}px at ${x.toFixed(1)}% ${y.toFixed(1)}%,#000 0%,#000 35%,transparent 72%)`);
       }
+      return layers.join(',');
     };
 
     const apply = p => {
-      // shutters, then the dissolve
-      const a = easeInOut(seg(p, 0, 0.55));
-      const d = easeInOut(seg(p, 0.55, 0.85));
-      const half = W / 2;
-      const edge = S + (half - S) * a;      // hard edge, measured from each side
-      const delta = B * d;                  // how far past the centre each side reaches
-      const pastRight = edge + delta;
-      past.style.clipPath = `inset(0 ${(half + B - pastRight).toFixed(1)}px 0 0)`;
-      const futLeft = W - edge - delta;
-      const futLayerLeft = half - B;
-      future.style.clipPath = `inset(0 0 0 ${(futLeft - futLayerLeft).toFixed(1)}px)`;
-      // the future side fades in across exactly the overlap, so wherever it
-      // is see-through the past painting is underneath it (never the cover)
-      const mask = delta > 0.5
-        ? `linear-gradient(90deg,transparent ${(B - delta).toFixed(1)}px,#000 ${(B + delta).toFixed(1)}px)`
-        : 'none';
-      future.style.webkitMaskImage = mask;
-      future.style.maskImage = mask;
+      // КФУ wordmark + crest are static now — visible from the very first frame
+      // (see below), so the cover never reads as an empty screen before you
+      // start scrolling. Only the side panels + subtitle still unfold on scroll.
 
-      // paintings settle in, and drift a touch toward the seam as it opens
-      const z = 1.1 - 0.07 * easeOut(seg(p, 0, 0.85));
-      const drift = 1.2 * d;
-      pastImg.style.transform = `translateX(${drift.toFixed(2)}%) scale(${z.toFixed(4)})`;
-      futureImg.style.transform = `translateX(${(-drift).toFixed(2)}%) scale(${z.toFixed(4)})`;
-
-      veil.style.opacity = easeOut(seg(p, 0.45, 0.85)).toFixed(3);
-
-      if (fly && fly.crest) {
-        const t = easeInOut(seg(p, 0.05, 0.72));
-        const fade = 1 - seg(p, 0.62, 0.74);
-        const k = fly.crest, q = fly.mono;
-        crest.style.transform = `translate(${(k.dx * t).toFixed(1)}px,${(k.dy * t).toFixed(1)}px) scale(${(1 + (k.s - 1) * t).toFixed(4)})`;
-        crest.style.opacity = fade.toFixed(3);
-        mono.style.transform = `translate(${(q.dx * t).toFixed(1)}px,${(q.dy * t).toFixed(1)}px) scale(${(1 + (q.s - 1) * t).toFixed(4)})`;
-        mono.style.opacity = fade.toFixed(3);
-        nav?.style.setProperty('--brand-o', seg(p, 0.6, 0.74).toFixed(3));
+      // B — past photo paints in top-to-bottom, soft brushed edge + ПРОШЛОЕ cascades down
+      const bp = clamp01((p - 0.18) / 0.32);
+      if (pastImg) {
+        const be = easeOut(bp);
+        const m = paintMask(be, true, be * 5.2);
+        pastImg.style.maskImage = m;
+        pastImg.style.webkitMaskImage = m;
+        pastImg.style.filter = `blur(${((1 - be) * 5).toFixed(1)}px)`;
       }
-      nav?.classList.toggle('nav--hero', p < 1);
+      cascade(pastLetters, p, 0.18, 0.50, { reverse: false, fromBelow: false, back: false });
 
-      const tn = easeInOut(seg(p, 0.12, 0.72));
-      if (fly) name.style.transform = `translateY(${(fly.name.dy * tn).toFixed(1)}px) scale(${(1 + 0.1 * tn).toFixed(4)})`;
-      name.style.setProperty('--hv', easeOut(seg(p, 0.3, 0.75)).toFixed(3));
+      // C — future photo paints in bottom-to-top, soft brushed edge + БУДУЩЕЕ cascades up, punchier
+      const cp = clamp01((p - 0.46) / 0.32);
+      if (futureImg) {
+        const ce = easeOut(cp);
+        const m = paintMask(ce, false, ce * -5.2);
+        futureImg.style.maskImage = m;
+        futureImg.style.webkitMaskImage = m;
+        futureImg.style.filter = `blur(${((1 - ce) * 5).toFixed(1)}px)`;
+      }
+      cascade(futureLetters, p, 0.46, 0.78, { reverse: true, fromBelow: true, back: true });
 
-      const tt = easeOut(seg(p, 0.72, 0.95));
-      tag.style.opacity = tt.toFixed(3);
-      tag.style.transform = `translate(-50%, ${(16 * (1 - tt)).toFixed(1)}px)`;
+      // D — subtitle writes in, left to right
+      const dp = clamp01((p - 0.76) / 0.12);
+      if (subtitle) {
+        const de = easeOut(dp);
+        subtitle.style.clipPath = `inset(0 ${(100 * (1 - de)).toFixed(1)}% 0 0)`;
+        subtitle.style.opacity = de > 0.02 ? 1 : 0;
+      }
 
-      if (cue) cue.style.opacity = (0.95 * (1 - seg(p, 0, 0.1))).toFixed(3);
+      if (cue) cue.style.opacity = Math.max(0, 0.92 * (1 - p / 0.18)).toFixed(2);
     };
 
     const progress = () => {
-      if (reduce) return 1;
-      const total = scrollEl.offsetHeight - pin.offsetHeight;
+      const rect = scrollEl.getBoundingClientRect();
+      const total = scrollEl.offsetHeight - innerHeight;
       if (total <= 0) return 1;
-      return clamp01(-scrollEl.getBoundingClientRect().top / total);
+      return clamp01(-rect.top / total);
     };
 
-    const refresh = () => { measure(); lastP = progress(); apply(lastP); };
-    refresh();
-    // web fonts change the monogram's size and position once they arrive
-    document.fonts?.ready.then(refresh);
-    addEventListener('load', refresh, { once: true });
+    apply(0); // opening state, set immediately (no flash of the final look)
 
     let hTicking = false;
+    let lastP = 0; // apply() rebuilds two multi-layer gradient masks + walks
+    // every letter on each call — real cost. Once progress settles at 1 (the
+    // sequence is done), scrolling on into Образование kept re-running that
+    // full computation every single scroll frame for no visual change at
+    // all, which is exactly the stutter right at that section boundary.
     const onHeroScroll = () => {
-      if (hTicking) return;
-      hTicking = true;
-      requestAnimationFrame(() => {
-        hTicking = false;
-        // past the hero the final frame just stays; a fast jump (anchor
-        // link) still lands on it exactly, so the menu brand is never left
-        // half-faded
-        const gone = scrollEl.getBoundingClientRect().bottom < -100;
-        const p = gone ? 1 : progress();
-        if (p !== lastP) { lastP = p; apply(p); }
-      });
+      const rect = scrollEl.getBoundingClientRect();
+      if (rect.bottom < -100) return; // hero long gone — final state stays frozen, skip work
+      if (!hTicking) {
+        requestAnimationFrame(() => {
+          const p = progress();
+          if (p !== lastP) { apply(p); lastP = p; }
+          hTicking = false;
+        });
+        hTicking = true;
+      }
     };
     addEventListener('scroll', onHeroScroll, { passive: true });
-    let rT = null;
-    addEventListener('resize', () => {
-      clearTimeout(rT);
-      rT = setTimeout(refresh, 120);
-    }, { passive: true });
+    addEventListener('resize', onHeroScroll, { passive: true });
   })();
 
   /* ---------- PARALLAX (scroll, throttled via rAF) ---------- */
