@@ -7,7 +7,7 @@
 <meta name="description" content="Крымский федеральный университет имени В. И. Вернадского. Прошлое, проверенное столетием — будущее, написанное сегодня.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="css/styles.css?v=70">
+<link rel="stylesheet" href="css/styles.css?v=71">
 <link rel="stylesheet" href="css/effects.css?v=2">
 </head>
 <body>
@@ -553,11 +553,13 @@
 </section>
 
 <!-- ============ STRUCTURE scene ============ -->
-<section class="section scene" id="structure">
+<section class="section scene scene--spring" id="structure">
   <div class="scene__media" data-parallax-bg="0.14">
-    <div class="imgslot"><img src="assets/img/autumn-mountains-storm.jpg" alt="" onerror="this.remove()"></div>
+    <div class="imgslot"><img src="assets/img/autumn-mountains-storm.jpg" alt="" onerror="this.remove()"><img class="img--spring" data-spring="assets/img/spring-mountains.webp" alt="" decoding="async"></div>
   </div>
   <div class="scene__scrim scene__scrim--brushed"></div>
+  <canvas class="petals petals--back" aria-hidden="true"></canvas>
+  <canvas class="petals petals--front" aria-hidden="true"></canvas>
   <div class="wrap">
     <span class="eyebrow" data-reveal>Структура</span>
     <h2 class="h-sec" data-reveal data-d="1">Институты<br>и факультеты</h2>
@@ -587,11 +589,13 @@
 </div>
 
 <!-- ============ FILIALS scene ============ -->
-<section class="section scene">
+<section class="section scene scene--spring">
   <div class="scene__media" data-parallax-bg="0.14">
-    <div class="imgslot"><img class="img--filials" src="assets/img/b2.jpg" alt="" onerror="this.remove()"></div>
+    <div class="imgslot"><img class="img--filials" src="assets/img/b2.jpg" alt="" onerror="this.remove()"><img class="img--filials img--spring" data-spring="assets/img/spring-ayudag.webp" alt="" decoding="async"></div>
   </div>
   <div class="scene__scrim scene__scrim--brushed"></div>
+  <canvas class="petals petals--back" aria-hidden="true"></canvas>
+  <canvas class="petals petals--front" aria-hidden="true"></canvas>
   <div class="wrap">
     <span class="eyebrow" data-reveal>По всему полуострову</span>
     <h2 class="h-sec" data-reveal data-d="1">Филиалы</h2>
@@ -692,6 +696,6 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
 </button>
 
-<script src="js/main.js?v=13"></script>
+<script src="js/main.js?v=14"></script>
 </body>
 </html>

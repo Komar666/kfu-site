@@ -704,6 +704,197 @@
     moveClouds();
   })();
 
+  /* ---------- SPRING: light theme turns the landscape scenes to spring ----------
+     The spring twins load only once somebody actually picks the light
+     theme (lazy, so a dark-theme visitor never pays for them), and only
+     fade in after decoding — no half-painted frame. */
+  const isLight = () => root.getAttribute('data-theme') === 'light';
+  const springImgs = $$('img[data-spring]');
+  const loadSpring = () => {
+    springImgs.forEach(img => {
+      if (img.getAttribute('src')) return;
+      img.loading = 'lazy';
+      img.addEventListener('load', () => {
+        (img.decode ? img.decode() : Promise.resolve()).catch(() => {})
+          .then(() => img.classList.add('is-ready'));
+      }, { once: true });
+      img.src = img.dataset.spring;
+    });
+  };
+
+  /* ---------- SPRING: petals on the wind ----------
+     Blossom petals blow in from the left edge on a gusty breeze. Each one
+     sways, spins, and tumbles (a cosine squash fakes the 3-D flip). Most
+     drift behind the cards; a few big soft-focus ones pass in front, like
+     they're right next to the camera. Runs only in the light theme, only
+     while the scene is on screen, never with reduced motion. */
+  const petalScenes = $$('.scene').filter(s => $('.petals', s));
+  let springStart = null, springStop = null;
+  if (!reduce && petalScenes.length) {
+    const DPR = Math.min(devicePixelRatio || 1, 1.5);
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const TINTS = [
+      ['#f2a9bd', '#fff2f5'], ['#f6c4d1', '#ffffff'], ['#ec9db3', '#fde5ec'],
+      ['#f9dfe6', '#ffffff'], ['#f4b8c8', '#fff8fa']
+    ];
+    // one sprite per tint, drawn once: a cherry petal with its little notch
+    const makeSprite = ([base, tip], size, blur) => {
+      const pad = blur * 3;
+      const c = document.createElement('canvas');
+      c.width = c.height = Math.ceil(size + pad * 2);
+      const g = c.getContext('2d');
+      g.translate(c.width / 2, c.height / 2);
+      if (blur) g.filter = `blur(${blur}px)`;
+      const w = size * 0.62, h = size;
+      g.beginPath();
+      g.moveTo(0, h * 0.5);
+      g.bezierCurveTo(-w * 0.75, h * 0.2, -w * 0.62, -h * 0.42, -w * 0.16, -h * 0.5);
+      g.lineTo(0, -h * 0.4);
+      g.lineTo(w * 0.16, -h * 0.5);
+      g.bezierCurveTo(w * 0.62, -h * 0.42, w * 0.75, h * 0.2, 0, h * 0.5);
+      const grad = g.createLinearGradient(0, h * 0.5, 0, -h * 0.5);
+      grad.addColorStop(0, base);
+      grad.addColorStop(0.7, tip);
+      grad.addColorStop(1, tip);
+      g.fillStyle = grad;
+      g.fill();
+      g.globalAlpha = 0.35;
+      g.strokeStyle = base;
+      g.lineWidth = Math.max(0.6, size * 0.03);
+      g.beginPath();
+      g.moveTo(0, h * 0.45);
+      g.quadraticCurveTo(w * 0.05, 0, 0, -h * 0.3);
+      g.stroke();
+      return c;
+    };
+    const backSprites = TINTS.map(t => makeSprite(t, 22 * DPR, 0));
+    const frontSprites = TINTS.map(t => makeSprite(t, 46 * DPR, 2.2 * DPR));
+
+    // one shared, gusty wind for all scenes
+    let gust = 0, gustT = 0, nextGust = rand(4, 8);
+    const windAt = (t, dt) => {
+      nextGust -= dt;
+      if (nextGust <= 0 && gustT <= 0) { gustT = 2.8; nextGust = rand(7, 13); }
+      if (gustT > 0) { gustT -= dt; gust = Math.sin(Math.PI * (1 - gustT / 2.8)) * 150; }
+      else gust = 0;
+      return 55 + 30 * Math.sin(t * 0.33) + 18 * Math.sin(t * 0.91 + 1.3) + gust;
+    };
+
+    const fields = petalScenes.map(scene => {
+      const back = $('.petals--back', scene), front = $('.petals--front', scene);
+      const f = { scene, layers: [
+        { cv: back, ctx: back.getContext('2d'), sprites: backSprites, list: [], front: false },
+        { cv: front, ctx: front.getContext('2d'), sprites: frontSprites, list: [], front: true }
+      ], W: 0, H: 0, visible: false };
+
+      const spawn = (L, p, anywhere) => {
+        const { W, H } = f;
+        const fromTop = Math.random() < 0.3;
+        p.x = anywhere ? rand(-40, W) : fromTop ? rand(-40, W * 0.6) : rand(-120, -30);
+        p.y = anywhere ? rand(-40, H) : fromTop ? rand(-60, -20) : rand(-H * 0.1, H * 0.85);
+        p.depth = L.front ? rand(1.35, 1.8) : rand(0.55, 1.15);
+        p.scale = L.front ? rand(0.7, 1.15) : rand(0.45, 1) * (0.6 + p.depth * 0.4);
+        p.fall = rand(14, 38) * p.depth;
+        p.swayA = rand(10, 34);
+        p.swayF = rand(0.8, 1.9);
+        p.ph = rand(0, Math.PI * 2);
+        p.rot = rand(0, Math.PI * 2);
+        p.spin = rand(-1.6, 1.6);
+        p.flip = rand(0, Math.PI * 2);
+        p.flipV = rand(1.4, 3.6);
+        p.alpha = L.front ? rand(0.55, 0.8) : rand(0.65, 0.95);
+        p.sp = L.sprites[(Math.random() * L.sprites.length) | 0];
+        return p;
+      };
+
+      f.resize = () => {
+        const r = scene.getBoundingClientRect();
+        f.W = r.width; f.H = r.height;
+        const backN = Math.min(60, Math.round((f.W * f.H) / 36000));
+        const counts = [backN, Math.max(2, Math.round(backN / 9))];
+        f.layers.forEach((L, i) => {
+          L.cv.width = Math.round(f.W * DPR);
+          L.cv.height = Math.round(f.H * DPR);
+          while (L.list.length < counts[i]) L.list.push(spawn(L, {}, true));
+          L.list.length = counts[i];
+        });
+      };
+
+      f.step = (t, dt, wind) => {
+        const { W, H } = f;
+        f.layers.forEach(L => {
+          const g = L.ctx;
+          g.setTransform(1, 0, 0, 1, 0, 0);
+          g.clearRect(0, 0, L.cv.width, L.cv.height);
+          for (const p of L.list) {
+            p.x += wind * p.depth * dt;
+            p.y += (p.fall + Math.cos(t * p.swayF + p.ph) * p.swayA) * dt;
+            p.rot += (p.spin + wind * 0.004) * dt;
+            p.flip += p.flipV * (1 + gust / 200) * dt;
+            if (p.x > W + 60 || p.y > H + 60) { spawn(L, p, false); continue; }
+            const sy = Math.cos(p.flip);
+            const s = p.scale;
+            g.setTransform(DPR, 0, 0, DPR, 0, 0);
+            g.translate(p.x, p.y);
+            g.rotate(p.rot);
+            g.scale(s, s * (0.18 + 0.82 * Math.abs(sy)));
+            // the underside of a petal reads a touch darker as it turns over
+            g.globalAlpha = p.alpha * (sy < 0 ? 0.82 : 1);
+            const k = p.sp.width / DPR;
+            g.drawImage(p.sp, -k / 2, -k / 2, k, k);
+          }
+        });
+      };
+
+      f.clear = () => f.layers.forEach(L => L.ctx.clearRect(0, 0, L.cv.width, L.cv.height));
+      return f;
+    });
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(es => es.forEach(e => {
+        const f = fields.find(x => x.scene === e.target);
+        if (f) f.visible = e.isIntersecting;
+      }), { rootMargin: '120px 0px' });
+      fields.forEach(f => io.observe(f.scene));
+    } else fields.forEach(f => (f.visible = true));
+
+    let running = false, last = 0, stopAt = 0;
+    const frame = now => {
+      const t = now / 1000;
+      const dt = Math.min(0.05, last ? t - last : 0.016);
+      last = t;
+      // keep drawing a moment after switching to dark so the petals fade
+      // out with the canvas instead of freezing mid-air
+      const live = isLight() || now < stopAt;
+      const wind = windAt(t, dt);
+      fields.forEach(f => { if (f.visible && live) f.step(t, dt, wind); });
+      if (live && !document.hidden) requestAnimationFrame(frame);
+      else { running = false; last = 0; fields.forEach(f => f.clear()); }
+    };
+    const start = () => {
+      if (running || !isLight() || document.hidden) return;
+      running = true;
+      requestAnimationFrame(frame);
+    };
+
+    const sizeAll = () => fields.forEach(f => f.resize());
+    sizeAll();
+    let rsT = null;
+    addEventListener('resize', () => { clearTimeout(rsT); rsT = setTimeout(sizeAll, 150); }, { passive: true });
+    // the sections grow once fonts and lazy images settle
+    addEventListener('load', sizeAll, { once: true });
+    document.addEventListener('visibilitychange', start);
+    springStart = start;
+    springStop = () => { stopAt = performance.now() + 1500; };
+  }
+
+  const onSeason = () => {
+    if (isLight()) { loadSpring(); springStart?.(); }
+    else springStop?.();
+  };
+  new MutationObserver(onSeason).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  onSeason();
+
   /* ---------- Smooth anchor scroll with nav offset ---------- */
   $$('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
