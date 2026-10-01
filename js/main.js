@@ -675,6 +675,50 @@
     requestAnimationFrame(tick);
   })();
 
+  /* ---------- SPRING SCENES: depth parallax with the cursor ----------
+     Same idea as the ship, but in layers: the painting shifts least, the
+     petals behind the cards a bit more, the big near petals the most —
+     so the air in front of the mountain reads as real depth. The painting
+     is scaled up a touch so its edges never slide into view. */
+  (() => {
+    if (reduce || !fine) return;
+    $$('.scene--spring').forEach(section => {
+      const layers = [
+        [$('.scene__media .imgslot', section), 14, 8, 1.035],
+        [$('.petals--back', section), 24, 12, 1],
+        [$('.petals--front', section), 44, 22, 1]
+      ].filter(l => l[0]);
+      let visible = false;
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(es => es.forEach(e => (visible = e.isIntersecting)),
+          { threshold: 0 }).observe(section);
+      } else visible = true;
+
+      let tx = 0, ty = 0, cx = 0, cy = 0;
+      section.addEventListener('mousemove', e => {
+        const r = section.getBoundingClientRect();
+        tx = (e.clientX - r.left) / r.width - 0.5;
+        // vertical position relative to the viewport, not the (tall) section
+        ty = e.clientY / innerHeight - 0.5;
+      }, { passive: true });
+      section.addEventListener('mouseleave', () => { tx = 0; ty = 0; });
+
+      const tick = () => {
+        requestAnimationFrame(tick);
+        if (!visible) return;
+        const nx = cx + (tx - cx) * 0.05, ny = cy + (ty - cy) * 0.05;
+        if (Math.abs(nx - cx) < 1e-4 && Math.abs(ny - cy) < 1e-4) return;
+        cx = nx; cy = ny;
+        layers.forEach(([el, ax, ay, s]) => {
+          el.style.transform = `translate3d(${(-cx * ax).toFixed(2)}px, ${(-cy * ay).toFixed(2)}px, 0)` +
+            (s !== 1 ? ` scale(${s})` : '');
+        });
+      };
+      layers.forEach(([el, , , s]) => { if (s !== 1) el.style.transform = `scale(${s})`; });
+      requestAnimationFrame(tick);
+    });
+  })();
+
   /* ---------- BAND: two clouds drift sideways as the section scrolls
      through ---------- the back one slower, the front one faster, so
      they slip off toward the edge at slightly different rates — a cheap

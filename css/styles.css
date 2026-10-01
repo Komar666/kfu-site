@@ -755,8 +755,15 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
 :root[data-theme="light"] .scene--spring:has(.img--filials) .scene__scrim{
   background:linear-gradient(180deg,rgba(255,247,232,.5) 0%,rgba(255,247,232,.16) 24%,
     rgba(255,247,232,0) 46%,rgba(10,6,7,0) 72%,rgba(10,6,7,.6) 90%,#0a0607 100%)}
-:root[data-theme="light"] .scene--spring .h-sec{color:#3a1912;
+:root[data-theme="light"] .scene--spring .h-sec{color:#3a1912;position:relative;width:fit-content;
   text-shadow:0 0 28px rgba(255,248,234,.85),0 0 6px rgba(255,248,234,.6)}
+/* a patch of morning haze behind the eyebrow + heading — over a mid-tone
+   mountain the text halo alone isn't enough, so the painting itself gets
+   a soft light mist right where the words sit */
+:root[data-theme="light"] .scene--spring .h-sec::before{content:"";position:absolute;z-index:-1;
+  inset:-1.6em -1.4em -.5em -1.6em;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(255,248,234,.82) 0%,rgba(255,248,234,.6) 45%,rgba(255,248,234,0) 100%);
+  filter:blur(6px)}
 :root[data-theme="light"] .scene--spring .eyebrow{color:#7d2531;
   text-shadow:0 0 14px rgba(255,248,234,.95),0 0 4px rgba(255,248,234,.8)}
 :root[data-theme="light"] .scene--spring .mchip{background:rgba(249,243,230,.88);
