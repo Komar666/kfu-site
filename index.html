@@ -5,9 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>КФУ им. В.И. Вернадского — Крымский федеральный университет · Цифровой Ренессанс</title>
 <meta name="description" content="Крымский федеральный университет имени В. И. Вернадского. Прошлое, проверенное столетием — будущее, написанное сегодня.">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#0a0607">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="css/styles.css?v=73">
+<link rel="stylesheet" href="css/styles.css?v=74">
 <link rel="stylesheet" href="css/effects.css?v=2">
 </head>
 <body>
@@ -450,11 +454,13 @@
 </section>
 
 <!-- ============ ADMISSION scene ============ -->
-<section class="section scene admis" id="admission">
+<section class="section scene scene--spring admis" id="admission">
   <div class="scene__media" data-parallax-bg="0.18">
-    <div class="imgslot"><img class="img--light" src="assets/img/Light.jpg" alt="" onerror="this.remove()"></div>
+    <div class="imgslot"><img class="img--light" src="assets/img/Light.jpg" alt="" onerror="this.remove()"><img class="img--light img--spring" data-spring="assets/img/spring-lighthouse.webp" alt="" decoding="async"></div>
   </div>
   <div class="scene__scrim scene__scrim--bright"></div>
+  <canvas class="petals petals--back" aria-hidden="true"></canvas>
+  <canvas class="petals petals--front" aria-hidden="true"></canvas>
 
   <div class="gull-layer" data-parallax="0.05" style="top:14%">
     <svg class="gull" viewBox="0 0 60 20" style="width:44px;height:15px;animation-duration:27s;animation-delay:-4s">
@@ -478,7 +484,7 @@
   <div class="wrap">
     <span class="eyebrow center" data-reveal style="display:block;text-align:center">Приёмная кампания 2026</span>
     <h2 class="admis__title" data-reveal data-d="1">Поступление<br>в КФУ</h2>
-    <p class="lead mxauto center band__lead" data-reveal data-d="2" style="margin-top:24px;color:var(--ink-dim)">
+    <p class="lead mxauto center band__lead" data-reveal data-d="2" style="margin-top:24px">
       Более 6 000 бюджетных мест. Бакалавриат, специалитет, магистратура, аспирантура, ординатура
       и среднее профессиональное образование — выберите свою траекторию.
     </p>
@@ -697,6 +703,6 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
 </button>
 
-<script src="js/main.js?v=15"></script>
+<script src="js/main.js?v=16"></script>
 </body>
 </html>

@@ -684,7 +684,9 @@
     if (reduce || !fine) return;
     $$('.scene--spring').forEach(section => {
       const layers = [
-        [$('.scene__media .imgslot', section), 14, 8, 1.035],
+        // the admission lighthouse already follows the cursor on its own
+        // (see ADMISSION above) — only its petals join in here
+        [section.id === 'admission' ? null : $('.scene__media .imgslot', section), 14, 8, 1.035],
         [$('.petals--back', section), 24, 12, 1],
         [$('.petals--front', section), 44, 22, 1]
       ].filter(l => l[0]);
