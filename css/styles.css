@@ -628,8 +628,15 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
   color:var(--gold-hi);text-shadow:0 4px 18px rgba(0,0,0,.5),0 1px 4px rgba(0,0,0,.4)}
 /* ---------- coverflow carousel (admission "medal" cards) ---------- */
 .coverflow{--cf-card:clamp(190px,21vw,300px);position:relative;margin-top:52px;user-select:none}
-.coverflow__viewport{overflow:hidden;padding-block:26px;cursor:grab;touch-action:pan-y;outline:none;
-  perspective:calc(var(--cf-card) * 4.6);perspective-origin:50% 45%}
+/* the cards' drop shadows reach ~70px below them — the extra bottom padding
+   (given back with a negative margin, so the layout doesn't move) lets them
+   fade out on their own instead of being cut off in a straight line, and the
+   side mask dissolves the outer cards rather than chopping them at the edge;
+   over a bright painting both used to show as a pale rectangular "shelf" */
+.coverflow__viewport{overflow:hidden;padding-block:26px 84px;margin-bottom:-58px;cursor:grab;touch-action:pan-y;outline:none;
+  perspective:calc(var(--cf-card) * 4.6);perspective-origin:50% 45%;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 8%,#000 92%,transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0,#000 8%,#000 92%,transparent 100%)}
 .coverflow__viewport:active{cursor:grabbing}
 .coverflow__stage{position:relative;height:var(--cf-card);transform-style:preserve-3d}
 .coverflow__card{position:absolute;left:50%;top:0;width:var(--cf-card);aspect-ratio:1/1;border-radius:18px;
@@ -766,11 +773,8 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
   filter:blur(6px)}
 :root[data-theme="light"] .scene--spring .eyebrow{color:#7d2531;
   text-shadow:0 0 14px rgba(255,248,234,.95),0 0 4px rgba(255,248,234,.8)}
-/* admission: a bright sea morning — the title goes bordeaux, the lead sits
-   on a cream plate, and the painting melts into the cream page below */
-:root[data-theme="light"] #admission .scene__scrim{
-  background:linear-gradient(180deg,rgba(255,247,232,.45) 0%,rgba(255,247,232,.12) 22%,
-    rgba(255,247,232,0) 42%,rgba(242,233,216,0) 80%,rgba(242,233,216,.7) 94%,#f2e9d8 100%)}
+/* admission: a bright sea morning — the title goes bordeaux and the lead
+   sits on a cream plate; the painting keeps its clean bottom edge */
 :root[data-theme="light"] #admission .admis__title{color:#6e2130;
   text-shadow:0 0 34px rgba(255,248,234,.9),0 0 10px rgba(255,248,234,.7)}
 :root[data-theme="light"] #admission .band__lead{color:#3a2a22;font-weight:400;
