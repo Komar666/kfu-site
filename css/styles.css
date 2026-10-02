@@ -147,12 +147,6 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
 .imgslot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
 .img--ship{object-position:64% 56%}
 .img--filials{object-position:50% 100%}
-/* the spring Ayu-Dag sits higher in its own frame (more blossoming shore
-   below, the same sky above) — anchoring it at the bottom like the storm
-   version cut off the sky and jammed the summit against the top edge;
-   a third of the way down puts the summit and the sea line where the
-   storm painting has them */
-.img--filials.img--spring{object-position:50% 0%}
 /* taller block on wide screens: the extra room goes between the heading
    and the ticker, so the heading stays put while the painting opens up
    almost to its full height — the mountain drops and the heading ends up
