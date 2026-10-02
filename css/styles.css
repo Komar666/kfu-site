@@ -151,7 +151,15 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
    and the ticker, so the heading stays put while the painting opens up
    almost to its full height — the mountain drops and the heading ends up
    on open sky in both seasons, no plates or glows needed */
-@media (min-width:861px){.scene--filials .marquee{margin-top:calc(52px + 11.5vw)}}
+/* the ticker sits a little higher with room below it, and the painting's
+   bottom overscan (kept for the scroll parallax) shrinks to 2% — together
+   that lifts both paintings and opens the sea strip under the cards
+   instead of hiding it below the section edge */
+@media (min-width:861px){
+  .scene--filials{padding-bottom:calc(var(--gap) + 5vw)}
+  .scene--filials .marquee{margin-top:calc(52px + 6.5vw)}
+  .scene--filials .scene__media{inset:-14% 0 -2%}
+}
 /* lighthouse sits at ~75% across the source frame (measured from the
    actual pixels), not centre — a default 50% crop loses him entirely
    on tall/narrow viewports, which is exactly what was happening */
