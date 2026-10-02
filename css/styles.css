@@ -152,7 +152,12 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
    version cut off the sky and jammed the summit against the top edge;
    a third of the way down puts the summit and the sea line where the
    storm painting has them */
-.img--filials.img--spring{object-position:50% 33%}
+.img--filials.img--spring{object-position:50% 0%}
+/* taller block on wide screens: the extra room goes between the heading
+   and the ticker, so the heading stays put while the painting opens up
+   almost to its full height — the mountain drops and the heading ends up
+   on open sky in both seasons, no plates or glows needed */
+@media (min-width:861px){.scene--filials .marquee{margin-top:calc(52px + 11.5vw)}}
 /* lighthouse sits at ~75% across the source frame (measured from the
    actual pixels), not centre — a default 50% crop loses him entirely
    on tall/narrow viewports, which is exactly what was happening */
@@ -765,13 +770,8 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
 :root[data-theme="light"] .scene--spring .scene__scrim{background:none}
 /* clean ink, no glow: the headings sit on open sky now */
 :root[data-theme="light"] .scene--spring .h-sec{color:#3a1912;text-shadow:none}
-/* the small eyebrow can't hold its own over a busy mountainside, so it
-   gets a cream label — the same material as the cards below it */
-:root[data-theme="light"] .scene--spring .eyebrow{color:#7d2531;text-shadow:none;
-  background:rgba(255,249,238,.9);padding:.6em 1.15em .6em .9em;border-radius:999px;
-  box-shadow:0 8px 22px -12px rgba(60,30,15,.4)}
+:root[data-theme="light"] .scene--spring .eyebrow{color:#7d2531;text-shadow:none}
 :root[data-theme="light"] .scene--spring .eyebrow::before{background:linear-gradient(90deg,transparent,#a9812f)}
-:root[data-theme="light"] #admission .eyebrow{width:fit-content;margin-inline:auto;padding-inline:1.15em}
 /* admission: a bright sea morning — the title goes bordeaux and the lead
    sits on a cream plate; the painting keeps its clean bottom edge */
 :root[data-theme="light"] #admission .admis__title{color:#6e2130;text-shadow:none}
