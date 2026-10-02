@@ -763,16 +763,18 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
    cream cards as the institutes, and the bottom eases back into the dark
    section that follows instead of ending on a hard bright edge */
 :root[data-theme="light"] .scene--spring .scene__scrim{background:none}
-:root[data-theme="light"] .scene--spring:has(.img--filials) .scene__scrim{
-  background:linear-gradient(180deg,rgba(10,6,7,0) 72%,rgba(10,6,7,.6) 90%,#0a0607 100%)}
-:root[data-theme="light"] .scene--spring .h-sec{color:#3a1912;
-  text-shadow:0 0 28px rgba(255,248,234,.85),0 0 6px rgba(255,248,234,.6)}
-:root[data-theme="light"] .scene--spring .eyebrow{color:#7d2531;
-  text-shadow:0 0 14px rgba(255,248,234,.95),0 0 4px rgba(255,248,234,.8)}
+/* clean ink, no glow: the headings sit on open sky now */
+:root[data-theme="light"] .scene--spring .h-sec{color:#3a1912;text-shadow:none}
+/* the small eyebrow can't hold its own over a busy mountainside, so it
+   gets a cream label — the same material as the cards below it */
+:root[data-theme="light"] .scene--spring .eyebrow{color:#7d2531;text-shadow:none;
+  background:rgba(255,249,238,.9);padding:.6em 1.15em .6em .9em;border-radius:999px;
+  box-shadow:0 8px 22px -12px rgba(60,30,15,.4)}
+:root[data-theme="light"] .scene--spring .eyebrow::before{background:linear-gradient(90deg,transparent,#a9812f)}
+:root[data-theme="light"] #admission .eyebrow{width:fit-content;margin-inline:auto;padding-inline:1.15em}
 /* admission: a bright sea morning — the title goes bordeaux and the lead
    sits on a cream plate; the painting keeps its clean bottom edge */
-:root[data-theme="light"] #admission .admis__title{color:#6e2130;
-  text-shadow:0 0 34px rgba(255,248,234,.9),0 0 10px rgba(255,248,234,.7)}
+:root[data-theme="light"] #admission .admis__title{color:#6e2130;text-shadow:none}
 :root[data-theme="light"] #admission .band__lead{color:#3a2a22;font-weight:400;
   background:rgba(255,249,238,.84);box-shadow:0 20px 50px -24px rgba(60,30,15,.45)}
 :root[data-theme="light"] .scene--spring .mchip{background:rgba(249,243,230,.88);
