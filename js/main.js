@@ -721,6 +721,55 @@
     });
   })();
 
+  /* ---------- BAND: the ship painting comes alive ----------
+     The video is fetched only as the scene approaches, and starts once
+     the lower part of the scene (the ship's hull and the open water) is
+     on screen. It dissolves in over the painting — its first frame is the
+     painting — plays once and holds its last frame. Leaving the scene
+     resets it, so coming back plays it again. Skipped with reduced motion
+     or when the visitor asked to save data. */
+  (() => {
+    const video = $('.band__video');
+    const scene = video && video.closest('.band');
+    const trigger = scene && $('.stats', scene);
+    if (!video || !trigger || reduce || !('IntersectionObserver' in window)) return;
+    if (navigator.connection && navigator.connection.saveData) return;
+
+    let loaded = false, armed = true;
+    const load = () => {
+      if (loaded) return;
+      loaded = true;
+      video.preload = 'auto';
+      // phones get the 720p cut — a third of the weight, same look at that size
+      const small = matchMedia('(max-width: 860px)').matches && video.dataset.videoSm;
+      video.src = small ? video.dataset.videoSm : video.dataset.video;
+      video.load();
+    };
+    video.addEventListener('playing', () => video.classList.add('is-playing'));
+
+    // fetch ahead of time, while the visitor is still a screen or so away
+    new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) load(); }),
+      { rootMargin: '0px 0px 120% 0px' }).observe(scene);
+
+    // play when the bottom of the scene is comfortably in view
+    new IntersectionObserver(es => es.forEach(e => {
+      if (!e.isIntersecting || !armed) return;
+      armed = false;
+      load();
+      video.currentTime = 0;
+      video.play().catch(() => { armed = true; });
+    }), { rootMargin: '0px 0px -20% 0px' }).observe(trigger);
+
+    // once the whole scene is off screen, quietly go back to the painting
+    new IntersectionObserver(es => es.forEach(e => {
+      if (e.isIntersecting || armed) return;
+      video.pause();
+      video.classList.remove('is-playing');
+      armed = true;
+      setTimeout(() => { if (armed) video.currentTime = 0; }, 950);
+    })).observe(scene);
+  })();
+
   /* ---------- BAND: two clouds drift sideways as the section scrolls
      through ---------- the back one slower, the front one faster, so
      they slip off toward the edge at slightly different rates — a cheap
