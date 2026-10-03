@@ -776,7 +776,7 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
 :root[data-theme="light"] .scene--spring .eyebrow::before{background:linear-gradient(90deg,transparent,#a9812f)}
 /* admission: a bright sea morning — the title goes bordeaux and the lead
    sits on a cream plate; the painting keeps its clean bottom edge */
-:root[data-theme="light"] #admission .admis__title{color:#6e2130;text-shadow:none}
+:root[data-theme="light"] #admission .admis__title{color:#fff;text-shadow:none}
 :root[data-theme="light"] #admission .band__lead{color:#3a2a22;font-weight:400;
   background:rgba(255,249,238,.84);box-shadow:0 20px 50px -24px rgba(60,30,15,.45)}
 :root[data-theme="light"] .scene--spring .mchip{background:rgba(249,243,230,.88);
