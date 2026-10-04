@@ -461,8 +461,11 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
 .edu__track{position:absolute;top:0;bottom:11vh;left:0;display:flex;align-items:center;
   gap:clamp(70px,7.5vw,140px);padding-inline:var(--pad) 34vw;width:max-content;will-change:transform}
 
-.edu__intro{flex:0 0 clamp(360px,40vw,640px);position:relative;z-index:2}
-.edu__intro .h-sec{margin-top:14px;font-size:clamp(2.6rem,4.9vw,5.6rem);hyphens:manual}
+.edu__intro{--intro-w:clamp(360px,40vw,640px);flex:0 0 var(--intro-w);position:relative;z-index:2}
+/* never broken: "ОБРАЗОВАНИЕ" is ~7.16em wide in Cormorant caps, so the
+   size is derived from the column width with a little air to spare */
+.edu__intro .h-sec{margin-top:14px;white-space:nowrap;hyphens:none;
+  font-size:min(5.6rem,calc(var(--intro-w) / 7.5))}
 .edu__intro .lead{margin-top:26px;max-width:46ch}
 .edu__hint{display:inline-flex;align-items:center;gap:12px;margin-top:34px;
   font-size:.78rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
@@ -529,7 +532,7 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
 .edu--flat .exhibit__canvas img{left:0;width:100%;transform:none!important}
 .edu--flat .exhibit__plaque{position:relative;top:auto;margin-top:22px;width:auto;max-width:340px}
 .edu--flat .exhibit__light{left:-12%;right:-12%}
-@media (max-width:860px){.edu__intro .h-sec{font-size:clamp(2.1rem,10.6vw,4.4rem)}}
+@media (max-width:860px){.edu__intro .h-sec{font-size:min(4.4rem,calc((100vw - 2 * var(--pad)) / 7.5))}}
 
 /* ============================================================
    FEATURE SCENE (Между Чёрным морем...)
