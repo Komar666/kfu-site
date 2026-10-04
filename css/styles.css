@@ -137,7 +137,17 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
 [data-reveal][data-d="1"]{transition-delay:.08s}[data-reveal][data-d="2"]{transition-delay:.16s}
 [data-reveal][data-d="3"]{transition-delay:.24s}[data-reveal][data-d="4"]{transition-delay:.32s}
 [data-reveal][data-d="5"]{transition-delay:.40s}[data-reveal][data-d="6"]{transition-delay:.48s}
-@media (prefers-reduced-motion:reduce){[data-reveal]{opacity:1;transform:none;transition:none}
+/* soft reveal (USEFUL onward): a shorter rise, a longer and gentler fade
+   with a long tail, a hint of scale, and a slower stagger between
+   neighbours — big cards over paintings read calmer this way. Delays go
+   through --rd so they can be attached to opacity/transform only, leaving
+   any hover transitions on the same element undelayed. */
+[data-reveal="soft"],[data-reveal="soft"][data-d]{
+  --rev:opacity 1.3s cubic-bezier(.22,1,.36,1) var(--rd,0s),transform 1.5s cubic-bezier(.22,1,.36,1) var(--rd,0s);
+  transform:translate3d(0,22px,0) scale(.985);transition:var(--rev)}
+[data-reveal="soft"][data-d="1"]{--rd:.12s}[data-reveal="soft"][data-d="2"]{--rd:.24s}
+[data-reveal="soft"][data-d="3"]{--rd:.36s}[data-reveal="soft"][data-d="4"]{--rd:.48s}
+@media (prefers-reduced-motion:reduce){[data-reveal],[data-reveal="soft"],[data-reveal="soft"][data-d]{opacity:1;transform:none;transition:none}
   .grain{display:none} html{scroll-behavior:auto}}
 
 .imgslot{position:relative;overflow:hidden;background:
@@ -717,6 +727,10 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
 .upill:hover{color:#f3e7d2;border-color:transparent;
   transition:color .25s var(--ease) .15s,border-color .25s var(--ease) .15s}
 .upill .dot{width:6px;height:6px;border-radius:50%;background:var(--gold)}
+/* the hover colour transition above used to replace the reveal transition
+   outright, so the pills popped in with no fade at all — keep both */
+.upill[data-reveal]{transition:var(--rev),color .2s var(--ease-out),border-color .2s var(--ease-out)}
+.upill[data-reveal]:hover{transition:var(--rev),color .25s var(--ease) .15s,border-color .25s var(--ease) .15s}
 
 /* ============================================================
    STRUCTURE / FILIALS — scene sections
