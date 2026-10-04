@@ -147,6 +147,9 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
   transform:translate3d(0,22px,0) scale(.985);transition:var(--rev)}
 [data-reveal="soft"][data-d="1"]{--rd:.12s}[data-reveal="soft"][data-d="2"]{--rd:.24s}
 [data-reveal="soft"][data-d="3"]{--rd:.36s}[data-reveal="soft"][data-d="4"]{--rd:.48s}
+/* must out-rank the [data-d] start state above, or delayed items fade in
+   but stay parked 22px low */
+[data-reveal="soft"].in,[data-reveal="soft"][data-d].in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){[data-reveal],[data-reveal="soft"],[data-reveal="soft"][data-d]{opacity:1;transform:none;transition:none}
   .grain{display:none} html{scroll-behavior:auto}}
 
