@@ -743,6 +743,91 @@ void main(){
     addEventListener('resize', onHeroScroll, { passive: true });
   })();
 
+  /* ---------- EDUCATION: «Зал КФУ» ----------
+     Wide screens: the section is made exactly as tall as the hall is wide
+     (minus one screen), so scrolling through it maps 1:1 onto walking the
+     track sideways. Each exhibit's --lit comes from how close its centre is
+     to the middle of the screen; the painting inside drifts against the
+     wall for depth. Phones / reduced motion: a plain stacked column where
+     each exhibit's light comes on once as it scrolls into view. */
+  (() => {
+    const sect = $('#education');
+    const scroller = $('#eduScroll');
+    const track = $('#eduTrack');
+    if (!sect || !scroller || !track) return;
+    const exhibits = $$('.exhibit', track);
+    const imgs = exhibits.map(ex => $('img', ex));
+    const rail = $('#eduRail'), count = $('#eduCount');
+    const flatMQ = matchMedia('(max-width: 860px)');
+    const clamp01 = n => Math.min(1, Math.max(0, n));
+    const smooth = t => t * t * (3 - 2 * t);
+
+    let flat = null, dist = 0, centres = [], lastX = null, io = null;
+
+    const setFlat = on => {
+      if (on === flat) return;
+      flat = on;
+      sect.classList.toggle('edu--flat', on);
+      track.style.transform = '';
+      imgs.forEach(img => img && (img.style.transform = ''));
+      if (on) {
+        exhibits.forEach(ex => ex.style.setProperty('--lit', reduce ? 1 : 0));
+        if (!reduce && 'IntersectionObserver' in window) {
+          io = new IntersectionObserver(es => es.forEach(e => {
+            if (e.isIntersecting) { e.target.style.setProperty('--lit', 1); io.unobserve(e.target); }
+          }), { rootMargin: '0px 0px -25% 0px' });
+          exhibits.forEach(ex => io.observe(ex));
+        } else exhibits.forEach(ex => ex.style.setProperty('--lit', 1));
+      } else if (io) { io.disconnect(); io = null; }
+    };
+
+    const measure = () => {
+      setFlat(reduce || flatMQ.matches);
+      if (flat) { scroller.style.height = ''; return; }
+      dist = Math.max(0, track.scrollWidth - innerWidth);
+      scroller.style.height = (dist + innerHeight) + 'px';
+      centres = exhibits.map(ex => ex.offsetLeft + ex.offsetWidth / 2);
+      lastX = null;
+      update();
+    };
+
+    const update = () => {
+      if (flat) return;
+      const top = scroller.getBoundingClientRect().top;
+      const p = dist ? clamp01(-top / dist) : 0;
+      const x = -dist * p;
+      if (x === lastX) return;
+      lastX = x;
+      track.style.transform = `translate3d(${x.toFixed(1)}px,0,0)`;
+      const mid = innerWidth / 2, reach = innerWidth * 0.42;
+      let best = 0, bestD = Infinity;
+      exhibits.forEach((ex, i) => {
+        const d = (centres[i] + x - mid) / reach;       // −1 … 1 across the screen
+        const ad = Math.abs(d);
+        if (ad < bestD) { bestD = ad; best = i; }
+        ex.style.setProperty('--lit', smooth(clamp01(1 - (ad - 0.12) / 0.78)).toFixed(3));
+        if (imgs[i] && ad < 2.2) imgs[i].style.transform = `translate3d(${(-d * 3.2).toFixed(2)}%,0,0)`;
+      });
+      if (rail) rail.style.transform = `scaleX(${p.toFixed(4)})`;
+      if (count) count.textContent = `0${best + 1} / 0${exhibits.length}`;
+    };
+
+    let ticking = false;
+    addEventListener('scroll', () => {
+      if (flat || ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { ticking = false; update(); });
+    }, { passive: true });
+    let rT = null;
+    addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(measure, 120); }, { passive: true });
+    flatMQ.addEventListener?.('change', measure);
+    measure();
+    // frame widths come from aspect-ratio, but the fonts in the intro panel
+    // change the track width once they arrive
+    document.fonts?.ready.then(measure);
+    addEventListener('load', measure, { once: true });
+  })();
+
   /* ---------- PARALLAX (scroll, throttled via rAF) ---------- */
   const layers = $$('[data-parallax], [data-parallax-bg]');
   let ticking = false;

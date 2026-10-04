@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#0a0607">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="css/styles.css?v=87">
+<link rel="stylesheet" href="css/styles.css?v=89">
 <link rel="stylesheet" href="css/effects.css?v=2">
 </head>
 <body>
@@ -145,46 +145,91 @@
 </section>
 
 <!-- ============ EDUCATION ============ -->
-<section class="section" id="education">
-  <div class="wrap">
-    <div class="edu__head">
-      <div data-reveal>
-        <span class="eyebrow">Проверенное столетием</span>
-        <h2 class="h-sec">Образование</h2>
-      </div>
-      <p class="lead" data-reveal data-d="1">
-        Крымский федеральный университет имени В.&nbsp;И.&nbsp;Вернадского — старейший и крупнейший вуз
-        Республики Крым. Объединяет 11 институтов и 9 филиалов. Готовит специалистов по 187 направлениям
-        бакалавриата, специалитета и магистратуры. Основан в 1918 году.
-      </p>
-    </div>
+<!-- EDUCATION — «Зал КФУ»: the block pins and you walk along a museum
+     wall; the painting nearest the centre gets its picture light -->
+<section class="section edu" id="education">
+  <div class="edu__scroll" id="eduScroll">
+    <div class="edu__pin">
+      <div class="edu__track" id="eduTrack">
 
-    <div class="gallery">
-      <figure class="g-1" data-reveal>
-        <div class="imgslot"><img src="assets/img/quill-ink-books.jpg" alt="" onerror="this.remove()"><div class="ph"><svg><use href="#ph"/></svg></div></div>
-        <figcaption>Наследие</figcaption>
-        <div class="gallery__stat" aria-hidden="true"><b>2554</b><span>научно‑педагогических работника</span></div>
-      </figure>
-      <figure class="g-2" data-reveal data-d="1">
-        <div class="imgslot"><img src="assets/img/History.jpg" alt="" onerror="this.remove()"><div class="ph"><svg><use href="#ph"/></svg></div></div>
-        <figcaption>Знание</figcaption>
-        <div class="gallery__stat" aria-hidden="true"><b>384</b><span>программы высшего образования</span></div>
-      </figure>
-      <figure class="g-3" data-reveal data-d="2">
-        <div class="imgslot"><img src="assets/img/laptop-on-books.jpg" alt="" onerror="this.remove()"><div class="ph"><svg><use href="#ph"/></svg></div></div>
-        <figcaption>Технологии</figcaption>
-        <div class="gallery__stat" aria-hidden="true"><b>7</b><span>городов Крыма</span></div>
-      </figure>
-      <figure class="g-2" data-reveal data-d="2">
-        <div class="imgslot"><img src="assets/img/future-city-gold.jpg" alt="" onerror="this.remove()"><div class="ph"><svg><use href="#ph"/></svg></div></div>
-        <figcaption>Ориентир</figcaption>
-        <div class="gallery__stat" aria-hidden="true"><b>2030</b><span>участник программы «Приоритет»</span></div>
-      </figure>
-      <figure class="g-3" data-reveal data-d="3">
-        <div class="imgslot"><img src="assets/img/new day.jpg" alt="" onerror="this.remove()"><div class="ph"><svg><use href="#ph"/></svg></div></div>
-        <figcaption>Истоки</figcaption>
-        <div class="gallery__stat" aria-hidden="true"><b>2014</b><span>создание КФУ</span></div>
-      </figure>
+        <div class="edu__intro">
+          <span class="eyebrow">Проверенное столетием</span>
+          <h2 class="h-sec">Образо&shy;вание</h2>
+          <p class="lead">
+            Крымский федеральный университет имени В.&nbsp;И.&nbsp;Вернадского — старейший и крупнейший вуз
+            Республики Крым. Объединяет 11 институтов и 9 филиалов. Готовит специалистов по 187 направлениям
+            бакалавриата, специалитета и магистратуры. Основан в 1918 году.
+          </p>
+          <span class="edu__hint" aria-hidden="true">Пройдите по залу <i>→</i></span>
+        </div>
+
+        <figure class="exhibit" style="--h:54;--ar:1;--y:-3">
+          <span class="exhibit__light" aria-hidden="true"></span>
+          <span class="exhibit__lamp" aria-hidden="true"></span>
+          <div class="exhibit__frame"><div class="exhibit__canvas">
+            <img src="assets/img/quill-ink-books.jpg" alt="Перо, чернильница и старинные книги в луче света" loading="lazy" decoding="async">
+          </div></div>
+          <figcaption class="exhibit__plaque">
+            <span class="exhibit__no">Экспонат № 01</span>
+            <b class="exhibit__title">Наследие</b>
+            <span class="exhibit__fact"><strong>2 554</strong> научно‑педагогических работника</span>
+          </figcaption>
+        </figure>
+
+        <figure class="exhibit" style="--h:44;--ar:1;--y:-9">
+          <span class="exhibit__light" aria-hidden="true"></span>
+          <span class="exhibit__lamp" aria-hidden="true"></span>
+          <div class="exhibit__frame"><div class="exhibit__canvas">
+            <img src="assets/img/History.jpg" alt="Учёный рассматривает плод в старинной библиотеке" loading="lazy" decoding="async">
+          </div></div>
+          <figcaption class="exhibit__plaque">
+            <span class="exhibit__no">Экспонат № 02</span>
+            <b class="exhibit__title">Знание</b>
+            <span class="exhibit__fact"><strong>384</strong> программы высшего образования</span>
+          </figcaption>
+        </figure>
+
+        <figure class="exhibit" style="--h:40;--ar:1.79;--y:1">
+          <span class="exhibit__light" aria-hidden="true"></span>
+          <span class="exhibit__lamp" aria-hidden="true"></span>
+          <div class="exhibit__frame"><div class="exhibit__canvas">
+            <img src="assets/img/new day.jpg" alt="Крымское побережье на рассвете" loading="lazy" decoding="async">
+          </div></div>
+          <figcaption class="exhibit__plaque">
+            <span class="exhibit__no">Экспонат № 03</span>
+            <b class="exhibit__title">Истоки</b>
+            <span class="exhibit__fact"><strong>2014</strong> год создания КФУ</span>
+          </figcaption>
+        </figure>
+
+        <figure class="exhibit" style="--h:48;--ar:1;--y:-6">
+          <span class="exhibit__light" aria-hidden="true"></span>
+          <span class="exhibit__lamp" aria-hidden="true"></span>
+          <div class="exhibit__frame"><div class="exhibit__canvas">
+            <img src="assets/img/laptop-on-books.jpg" alt="Цифровая книга с голограммой Крыма" loading="lazy" decoding="async">
+          </div></div>
+          <figcaption class="exhibit__plaque">
+            <span class="exhibit__no">Экспонат № 04</span>
+            <b class="exhibit__title">Технологии</b>
+            <span class="exhibit__fact"><strong>7</strong> городов Крыма</span>
+          </figcaption>
+        </figure>
+
+        <figure class="exhibit" style="--h:56;--ar:.806;--y:-2">
+          <span class="exhibit__light" aria-hidden="true"></span>
+          <span class="exhibit__lamp" aria-hidden="true"></span>
+          <div class="exhibit__frame"><div class="exhibit__canvas">
+            <img src="assets/img/future-city-gold.jpg" alt="Золотой город будущего" loading="lazy" decoding="async">
+          </div></div>
+          <figcaption class="exhibit__plaque">
+            <span class="exhibit__no">Экспонат № 05</span>
+            <b class="exhibit__title">Ориентир</b>
+            <span class="exhibit__fact"><strong>2030</strong> участник программы «Приоритет»</span>
+          </figcaption>
+        </figure>
+
+      </div>
+      <div class="edu__rail" aria-hidden="true"><span class="edu__rail-fill" id="eduRail"></span><span class="edu__count" id="eduCount">01 / 05</span></div>
     </div>
   </div>
 </section>
@@ -703,6 +748,6 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
 </button>
 
-<script src="js/main.js?v=20"></script>
+<script src="js/main.js?v=21"></script>
 </body>
 </html>
