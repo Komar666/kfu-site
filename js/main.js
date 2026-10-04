@@ -547,6 +547,129 @@
       return layers.join(',');
     };
 
+    /* Golden burn: the side paintings are revealed by a ragged, glowing
+       edge — like paper catching fire — instead of the CSS gradient mask.
+       A tiny WebGL canvas per column, redrawn only when the scroll moves
+       the reveal. The field is mostly the reveal direction plus fbm noise,
+       so the edge travels top-to-bottom (past) or bottom-to-top (future)
+       while staying torn and organic; just behind the edge the paint is
+       scorched darker, the edge itself glows gold. No WebGL → the old
+       mask path below still runs. */
+    const BURN_FRAG = `
+precision mediump float;
+varying vec2 vUv;
+uniform sampler2D uTex;
+uniform vec2 uRes, uImg;
+uniform float uP, uDir, uSeed;
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p){
+  vec2 i = floor(p), f = fract(p), u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+float fbm(vec2 p){
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 5; i++){ v += a * noise(p); p = p * 2.03 + 17.0; a *= 0.5; }
+  return v;
+}
+void main(){
+  vec2 uv = vUv;
+  float rs = uRes.x / uRes.y, ri = uImg.x / uImg.y;
+  vec2 s = rs > ri ? vec2(1.0, ri / rs) : vec2(rs / ri, 1.0);
+  vec2 iuv = (uv - 0.5) * s + 0.5;
+  vec3 col = texture2D(uTex, vec2(iuv.x, 1.0 - iuv.y)).rgb;
+
+  float along = uDir > 0.0 ? 1.0 - uv.y : uv.y;
+  float n = fbm(vec2(uv.x * rs, uv.y) * 3.4 + uSeed);
+  // a fine high-frequency octave tears the edge into small ragged bites
+  float fine = noise(vec2(uv.x * rs, uv.y) * 46.0 + uSeed) - 0.5;
+  float field = along * 0.78 + n * 0.42 + fine * 0.035;
+  float edge = mix(-0.06, 1.26, uP);
+
+  float shown = 1.0 - smoothstep(edge - 0.006, edge, field);
+  float ember = smoothstep(edge - 0.02, edge, field) * (1.0 - smoothstep(edge, edge + 0.01, field));
+  float scorch = smoothstep(edge - 0.07, edge - 0.006, field) * shown;
+  col *= 1.0 - scorch * 0.6;
+  col = mix(col, col * vec3(1.05, 0.88, 0.7), scorch * 0.5);
+
+  float flick = 0.85 + 0.15 * noise(vec2(uv.x * rs * 40.0, uv.y * 40.0) + uP * 30.0);
+  vec3 emberCol = mix(vec3(0.78, 0.36, 0.08), vec3(1.0, 0.86, 0.52), ember) * flick;
+  float a = clamp(shown + ember, 0.0, 1.0);
+  vec3 rgb = col * shown + emberCol * ember * (1.0 - shown * 0.4);
+  gl_FragColor = vec4(min(rgb, vec3(a)), a);
+}`;
+    const makeBurn = (host, dir, seed) => {
+      const img = host && $('.imgslot img', host);
+      if (!img) return null;
+      const canvas = document.createElement('canvas');
+      canvas.className = 'hero__burn';
+      canvas.setAttribute('aria-hidden', 'true');
+      let gl;
+      try { gl = canvas.getContext('webgl', { premultipliedAlpha: true, antialias: false }); } catch (e) { gl = null; }
+      if (!gl) return null;
+      const sh = (type, src) => {
+        const o = gl.createShader(type);
+        gl.shaderSource(o, src); gl.compileShader(o);
+        if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o));
+        return o;
+      };
+      let prog;
+      try {
+        prog = gl.createProgram();
+        gl.attachShader(prog, sh(gl.VERTEX_SHADER, 'attribute vec2 p;varying vec2 vUv;void main(){vUv=p*.5+.5;gl_Position=vec4(p,0.,1.);}'));
+        gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, BURN_FRAG));
+        gl.linkProgram(prog);
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+      } catch (e) { console.warn('[hero burn]', e); return null; }
+      gl.useProgram(prog);
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      const loc = gl.getAttribLocation(prog, 'p');
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      const U = {};
+      ['uTex', 'uRes', 'uImg', 'uP', 'uDir', 'uSeed'].forEach(k => (U[k] = gl.getUniformLocation(prog, k)));
+      gl.uniform1f(U.uDir, dir);
+      gl.uniform1f(U.uSeed, seed);
+
+      let ready = false, p = 0;
+      const draw = () => {
+        if (!ready) return;
+        gl.uniform1f(U.uP, p);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      };
+      const resize = () => {
+        const dpr = Math.min(devicePixelRatio || 1, 1.5);
+        canvas.width = Math.max(1, Math.round(host.clientWidth * dpr));
+        canvas.height = Math.max(1, Math.round(host.clientHeight * dpr));
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.uniform2f(U.uRes, canvas.width, canvas.height);
+        draw();
+      };
+      const upload = () => {
+        if (!img.naturalWidth) return;
+        const t = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, t);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.uniform2f(U.uImg, img.naturalWidth, img.naturalHeight);
+        // hand over from the CSS mask to the canvas only once it can draw
+        host.style.maskImage = host.style.webkitMaskImage = 'none';
+        host.style.filter = 'none';
+        host.classList.add('is-burn');
+        host.appendChild(canvas);
+        ready = true;
+        resize();
+      };
+      if (img.complete) upload(); else img.addEventListener('load', upload, { once: true });
+      addEventListener('resize', resize, { passive: true });
+      return { set(v) { p = v; draw(); }, get ready() { return ready; } };
+    };
+    const pastBurn = makeBurn(pastImg, 1, 3.0);
+    const futureBurn = makeBurn(futureImg, -1, 11.0);
+
     const apply = p => {
       // КФУ wordmark + crest are static now — visible from the very first frame
       // (see below), so the cover never reads as an empty screen before you
@@ -554,8 +677,10 @@
 
       // B — past photo paints in top-to-bottom, soft brushed edge + ПРОШЛОЕ cascades down
       const bp = clamp01((p - 0.18) / 0.32);
-      if (pastImg) {
+      if (pastBurn && pastBurn.ready) pastBurn.set(easeOut(bp));
+      else if (pastImg) {
         const be = easeOut(bp);
+        if (pastBurn) pastBurn.set(be); // texture still loading — remember where we are
         const m = paintMask(be, true, be * 5.2);
         pastImg.style.maskImage = m;
         pastImg.style.webkitMaskImage = m;
@@ -565,8 +690,10 @@
 
       // C — future photo paints in bottom-to-top, soft brushed edge + БУДУЩЕЕ cascades up, punchier
       const cp = clamp01((p - 0.46) / 0.32);
-      if (futureImg) {
+      if (futureBurn && futureBurn.ready) futureBurn.set(easeOut(cp));
+      else if (futureImg) {
         const ce = easeOut(cp);
+        if (futureBurn) futureBurn.set(ce);
         const m = paintMask(ce, false, ce * -5.2);
         futureImg.style.maskImage = m;
         futureImg.style.webkitMaskImage = m;

@@ -362,6 +362,10 @@ h1,h2,h3{font-family:var(--ff-display);font-weight:700;line-height:1;letter-spac
   mask-image:linear-gradient(transparent,transparent);
   will-change:mask-image,filter}
 .hero__colimg .imgslot{position:absolute;inset:0}
+/* golden-burn reveal: the canvas draws the painting itself, so the plain
+   photo underneath steps aside once the canvas has taken over */
+.hero__burn{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block}
+.hero__colimg.is-burn .imgslot{visibility:hidden}
 .hero__colimg::after{content:"";position:absolute;inset:0;z-index:1;background:rgba(10,6,5,.22)}
 .hero__word--v{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;
   align-items:center;justify-content:center;pointer-events:none}
